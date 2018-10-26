@@ -126,6 +126,7 @@ public class ChooseTemplateDialogFragment extends DialogFragment implements Dial
 
         fileName.requestFocus();
         fileName.getBackground().setColorFilter(accentColor, PorterDuff.Mode.SRC_ATOP);
+        fileName.setText(".odt");
 
         try {
             Account account = AccountUtils.getCurrentOwnCloudAccount(getContext());
@@ -172,7 +173,7 @@ public class ChooseTemplateDialogFragment extends DialogFragment implements Dial
 
     @Override
     public void onClick(Template template) {
-        if (fileName.getText().toString().isEmpty()) {
+        if (fileName.getText().toString().isEmpty()) { // TODO check for extension
             DisplayUtils.showSnackMessage(listView, R.string.enter_filename);
         } else {
             createFromTemplate(template);
