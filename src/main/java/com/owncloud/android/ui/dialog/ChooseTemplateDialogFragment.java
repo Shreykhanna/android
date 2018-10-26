@@ -222,7 +222,7 @@ public class ChooseTemplateDialogFragment extends DialogFragment implements Dial
                     collaboraWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_TITLE, "Collabora");
                     collaboraWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_URL, url);
                     collaboraWebViewIntent.putExtra(ExternalSiteWebView.EXTRA_SHOW_SIDEBAR, false);
-                    MainApp.getAppContext().startActivity(collaboraWebViewIntent);
+                    fragment.startActivity(collaboraWebViewIntent);
 
                     fragment.dismiss();
                 }
