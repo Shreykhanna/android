@@ -30,12 +30,14 @@ public class Template {
     private String name;
     private String thumbnailLink;
     private String type;
+    private String extension;
 
-    public Template(int id, String name, String thumbnailLink, String type) {
+    public Template(int id, String name, String thumbnailLink, String type, String extension) {
         this.id = id;
         this.name = name;
         this.thumbnailLink = thumbnailLink;
         this.type = type;
+        this.extension = extension;
     }
 
     public int getId() {
@@ -52,5 +54,13 @@ public class Template {
 
     public String getThumbnailLink() {
         return thumbnailLink;
+    }
+
+    public String getExtension() {
+        return extension;
+    }
+
+    public void setExtension(String extension) {
+        this.extension = extension;
     }
 }

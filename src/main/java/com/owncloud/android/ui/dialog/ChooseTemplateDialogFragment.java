@@ -22,6 +22,8 @@
 package com.owncloud.android.ui.dialog;
 
 import android.accounts.Account;
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -73,6 +75,8 @@ public class ChooseTemplateDialogFragment extends DialogFragment implements Dial
     private static final String ARG_PARENT_FOLDER = "PARENT_FOLDER";
     private static final String ARG_TYPE = "TYPE";
     private static final String TAG = ChooseTemplateDialogFragment.class.getSimpleName();
+    private static final String DOT = ".";
+
     private TemplateAdapter adapter;
     private OCFile parentFolder;
     private OwnCloudClient client;
@@ -116,23 +120,31 @@ public class ChooseTemplateDialogFragment extends DialogFragment implements Dial
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         int accentColor = ThemeUtils.primaryAccentColor(getContext());
 
-        parentFolder = getArguments().getParcelable(ARG_PARENT_FOLDER);
-        Type type = Type.valueOf(getArguments().getString(ARG_TYPE));
+        Bundle arguments = getArguments();
+        if (arguments == null) {
+            throw new IllegalArgumentException("Arguments may not be null");
+        }
+
+        Activity activity = getActivity();
+        if (activity == null) {
+            throw new IllegalArgumentException("Activity may not be null");
+        }
+
+        parentFolder = arguments.getParcelable(ARG_PARENT_FOLDER);
+        Type type = Type.valueOf(arguments.getString(ARG_TYPE));
 
         // Inflate the layout for the dialog
-        LayoutInflater inflater = getActivity().getLayoutInflater();
-        View view = inflater.inflate(R.layout.choose_template, null);
+        LayoutInflater inflater = activity.getLayoutInflater();
+        @SuppressLint("InflateParams") View view = inflater.inflate(R.layout.choose_template, null);
         ButterKnife.bind(this, view);
 
         fileName.requestFocus();
         fileName.getBackground().setColorFilter(accentColor, PorterDuff.Mode.SRC_ATOP);
-        fileName.setText(".odt");
 
         try {
-            Account account = AccountUtils.getCurrentOwnCloudAccount(getContext());
-            OwnCloudAccount ocAccount = new OwnCloudAccount(account, getContext());
-            client = OwnCloudClientManagerFactory.getDefaultSingleton().
-                getClientFor(ocAccount, getContext());
+            Account account = AccountUtils.getCurrentOwnCloudAccount(activity);
+            OwnCloudAccount ocAccount = new OwnCloudAccount(account, activity);
+            client = OwnCloudClientManagerFactory.getDefaultSingleton().getClientFor(ocAccount, getContext());
 
             new FetchTemplateTask(this, client).execute(type);
         } catch (Exception e) {
@@ -140,12 +152,12 @@ public class ChooseTemplateDialogFragment extends DialogFragment implements Dial
         }
 
         listView.setHasFixedSize(true);
-        listView.setLayoutManager(new GridLayoutManager(getActivity(), 2));
+        listView.setLayoutManager(new GridLayoutManager(activity, 2));
         adapter = new TemplateAdapter(type, this, getContext());
         listView.setAdapter(adapter);
 
         // Build the dialog
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         builder.setView(view)
             .setNegativeButton(R.string.common_cancel, this)
             .setTitle(ThemeUtils.getColoredTitle(getResources().getString(R.string.select_template), accentColor));
@@ -160,9 +172,7 @@ public class ChooseTemplateDialogFragment extends DialogFragment implements Dial
         return dialog;
     }
 
-    private void createFromTemplate(Template template) {
-        String path = parentFolder.getRemotePath() + fileName.getText().toString();
-
+    private void createFromTemplate(Template template, String path) {
         new CreateFileFromTemplateTask(this, client, template, path).execute();
     }
 
@@ -173,10 +183,15 @@ public class ChooseTemplateDialogFragment extends DialogFragment implements Dial
 
     @Override
     public void onClick(Template template) {
-        if (fileName.getText().toString().isEmpty()) { // TODO check for extension
+        String name = fileName.getText().toString();
+        String path = parentFolder.getRemotePath() + name;
+
+        if (name.isEmpty()) { // TODO check for extension
             DisplayUtils.showSnackMessage(listView, R.string.enter_filename);
+        } else if (!name.endsWith(template.getExtension())) {
+            createFromTemplate(template, path + DOT + template.getExtension());
         } else {
-            createFromTemplate(template);
+            createFromTemplate(template, path);
         }
     }
 
@@ -268,6 +283,9 @@ public class ChooseTemplateDialogFragment extends DialogFragment implements Dial
                     DisplayUtils.showSnackMessage(fragment.listView, R.string.error_retrieving_templates);
                 } else {
                     fragment.setTemplateList(templateList);
+
+                    String name = DOT + templateList.get(0).getExtension();
+                    fragment.fileName.setText(name);
                 }
             } else {
                 Log_OC.e(TAG, "Error streaming file: no previewMediaFragment!");

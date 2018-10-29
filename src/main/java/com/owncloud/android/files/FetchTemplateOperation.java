@@ -81,8 +81,8 @@ public class FetchTemplateOperation extends RemoteOperation {
                     templateArray.add(new Template(templateObject.getInt("id"),
                             templateObject.getString("name"),
                             templateObject.getString("preview"),
-                            templateObject.getString("type")));
-
+                        templateObject.getString("type"),
+                        "odt")); // TODO replace via call
                 }
 
                 result = new RemoteOperationResult(true, getMethod);
