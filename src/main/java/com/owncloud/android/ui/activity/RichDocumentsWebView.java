@@ -37,7 +37,6 @@ import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -109,16 +108,6 @@ public class RichDocumentsWebView extends ExternalSiteWebView {
 
         webview.addJavascriptInterface(new RichDocumentsMobileInterface(), "RichDocumentsMobileInterface");
 
-
-        webview.setWebViewClient(new WebViewClient() {
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                webview.setVisibility(View.VISIBLE);
-
-                super.onPageFinished(view, url);
-            }
-        });
-
         webview.setWebChromeClient(new WebChromeClient() {
             RichDocumentsWebView activity = RichDocumentsWebView.this;
 
@@ -153,9 +142,7 @@ public class RichDocumentsWebView extends ExternalSiteWebView {
             new LoadUrl(this, getAccount()).execute(file.getLocalId());
         } else {
             webview.loadUrl(url);
-            hideLoading(); // TODO remove afterwards
         }
-
     }
 
     private void setThumbnail(OCFile file, ImageView thumbnailView) {
@@ -304,7 +291,6 @@ public class RichDocumentsWebView extends ExternalSiteWebView {
     }
 
     private void hideLoading() {
-        // todo execute via bridge
         thumbnail.setVisibility(View.GONE);
         fileName.setVisibility(View.GONE);
         progressBar.setVisibility(View.GONE);
@@ -325,6 +311,11 @@ public class RichDocumentsWebView extends ExternalSiteWebView {
         @JavascriptInterface
         public void share() {
             openShareDialog();
+        }
+
+        @JavascriptInterface
+        public void documentLoaded() {
+            hideLoading();
         }
     }
 
@@ -364,7 +355,6 @@ public class RichDocumentsWebView extends ExternalSiteWebView {
 
             if (!url.isEmpty()) {
                 richDocumentsWebView.webview.loadUrl(url);
-                richDocumentsWebView.hideLoading();
             } else {
                 Toast.makeText(richDocumentsWebView.getApplicationContext(),
                     R.string.richdocuments_failed_to_load_document, Toast.LENGTH_LONG).show();
